@@ -1,25 +1,14 @@
-
-# coding: utf-8
-
-# In[1]:
-
 import tweepy, json, pymongo
 import pandas as pd
 import numpy as np
 from twitterscraper import *
 from TextAnalysis import *
 
-
-# In[7]:
-
 # retrieving previously saved tweets from json file
 with open('data/electiontweets.json') as json_data:
     electionTweets = json.load(json_data)
 
 electionTweetsDf = pd.DataFrame.from_dict(electionTweets)
-
-
-# In[9]:
 
 from unidecode import unidecode
 
@@ -44,7 +33,7 @@ def getSatisfyingTweets(word,minN=1,origBow=bow,wordType='origWords'):
     boolRepres = wordRepres >= minN
     tmpArr = np.array(range(len(boolRepres)))[boolRepres]
     return {i:wordRepres[i] for i in tmpArr}
-    
+
 
 
 # In[14]:
@@ -144,4 +133,3 @@ p.select_one(HoverTool).tooltips = [
 ]
 
 show(p)
-
