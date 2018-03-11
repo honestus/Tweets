@@ -23,13 +23,13 @@ class StdOutListener(tweepy.StreamListener):
 
 def getApiKeys(fileName = 'apiConf'):
     with open (fileName, 'r') as file:
-        apiConf = json.load(file)
+        apiConf = list(map(str.strip, file.read().split(",")))
 
     keys = {}
-    keys['consumer key'] = apiConf['consumer_key']
-    keys['consumer secret'] = apiConf['consumer_secret']
-    keys['access token key'] = apiConf['access_token_key']
-    keys['access token secret'] = apiConf['access_token_secret']
+    keys['consumer key'] = apiConf[0]
+    keys['consumer secret'] = apiConf[1]
+    keys['access token key'] = apiConf[2]
+    keys['access token secret'] = apiConf[3]
 
     return keys
 
