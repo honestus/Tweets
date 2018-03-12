@@ -21,7 +21,7 @@ class StdOutListener(tweepy.StreamListener):
 
 
 
-def getApiKeys(fileName = 'apiConf'):
+def getApiKeys(fileName = 'apiConfO'):
     with open (fileName, 'r') as file:
         apiConf = list(map(str.strip, file.read().split(",")))
 
@@ -78,7 +78,7 @@ def save(tweets, collectionName, featuresToSave='all', onFile=False, onDb=True, 
             tweetCollection.insert_many(tweets)
         return collectionName
 
-def loadTweets(collectionName, fromFile = False, fromDb = False, dbName = ''):
+def loadTweets(collectionName, fromFile = False, fromDb = False, dbName = 'tweets'):
     def loadFromFile():
         tweets = []
         jsonFiles = [json for json in os.listdir("data/" + collectionName) if json.endswith('.json')]
@@ -91,12 +91,14 @@ def loadTweets(collectionName, fromFile = False, fromDb = False, dbName = ''):
 
         tweets = []
         client = pymongo.MongoClient()
+
         try:
             db = client[dbName]
+            tweetCollection = db[collectionName]
         except:
-            dbName = 'tweets'
-            db = client[dbName]
-        tweetCollection = db[collectionName]
+            db = client['tweets']
+            tweetCollection = db[collectionName]
+
         for tweet in tweetCollection.find({}, {'_id': 0}):
             tweets.append(tweet)
         return tweets

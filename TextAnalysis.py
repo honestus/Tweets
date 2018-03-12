@@ -1,4 +1,4 @@
-import re, regex
+import re, regex, xml
 import nltk
 import string
 
@@ -9,6 +9,10 @@ import string
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from nltk.tokenize import sent_tokenize, word_tokenize
+
+
+def remove_tags(text):
+    return ''.join(xml.etree.ElementTree.fromstring(text).itertext())
 
 
 def text_clean(text):
