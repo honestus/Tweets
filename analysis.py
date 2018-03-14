@@ -5,7 +5,7 @@ import os
 def init():
     for collection in [x for x in os.listdir('data/') if os.path.isdir('data/' + x)]:
         if not loadTweets(collectionName=collection, fromDb=True, dbName=''):
-            print("Automatically saved the tweets collection %s on mongoDB" %collection)
+            print("Automatically saved the tweets collection %s on mongoDB, starting from json files" %collection)
             tweetsToSave = loadTweets(fromFile=True,fromDb=False,collectionName=collection)
             save(collectionName=collection, onDb=True, onFile=False,tweets=tweetsToSave)
 

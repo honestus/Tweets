@@ -1,5 +1,4 @@
-import re, regex, xml
-import nltk
+import re, regex
 import string
 
 #nltk.download()
@@ -7,11 +6,10 @@ import string
 #nltk.download('wordnet')
 #nltk.download('averaged_perceptron_tagger')
 from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer, WordNetLemmatizer
-from nltk.tokenize import sent_tokenize, word_tokenize
 
 
 def remove_tags(text):
+    import xml
     return ''.join(xml.etree.ElementTree.fromstring(text).itertext())
 
 
@@ -24,9 +22,17 @@ def text_clean(text):
 
 
 def text_preprocess(text, nGrams=[], stopWords = set(stopwords.words("english"))):
-    #method to preprocess text. With respect to text_clean, it's useful for feature extraction starting from a text.
-    #If removeStop is set to True, it will remove every stopword from the text
-    #stem can assume value=1 if you want to use porterStemmer and =2 if you want to use wordnetLemmatizer
+    """ Method to preprocess text. With respect to text_clean, it's useful for feature extraction starting from a text.
+    It keeps track of stem, lemma and pos tag of every single word of the original text; it will also keep track of the emoticons.
+    You can also recover nGrams from the text, by using a list of integers referring the nGrams you want to recover
+    (eg: [2,3] will recover all the bigrams and trigrams)
+    Every stopword is removed from the text; if you would like to keep every word of the original texts,
+    you may simply have to use an empty list as the stopword list. """
+
+    from nltk.stem import PorterStemmer, WordNetLemmatizer
+    from nltk.tokenize import word_tokenize
+    from nltk import ngrams, pos_tag
+    from nltk import wordnet
     features, words, cleanedText = {}, {}, ""
 
     def get_emoticons():
@@ -53,17 +59,15 @@ def text_preprocess(text, nGrams=[], stopWords = set(stopwords.words("english"))
 
     def get_wordnet_pos(treebank_tag):
         if treebank_tag in ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']:
-            return nltk.wordnet.wordnet.VERB
+            return wordnet.wordnet.VERB
         elif treebank_tag in ['JJ', 'JJR', 'JJS']:
-            return nltk.wordnet.wordnet.ADJ
+            return wordnet.wordnet.ADJ
         elif treebank_tag in ['RB', 'RBR', 'RBS', 'WRB']:
-            return nltk.wordnet.wordnet.ADV
+            return wordnet.wordnet.ADV
         else:
-            return nltk.wordnet.wordnet.NOUN
+            return wordnet.wordnet.NOUN
 
     def getNGrams(n, orderedWords):
-        from nltk import ngrams
-
         nGrams = []
         for ngram in ngrams(orderedWords, n):
             nGrams.append ( "_".join(word for word in ngram))
@@ -74,7 +78,7 @@ def text_preprocess(text, nGrams=[], stopWords = set(stopwords.words("english"))
 
     #words in original form and their posTag in the sentence
     splittedWords = word_tokenize(text)
-    taggedWords = nltk.pos_tag(splittedWords)
+    taggedWords = pos_tag(splittedWords)
     #removing stopwords and punctuation from the list of the original words
     validWords = list(word for word in taggedWords if word[0] not in stopWords)
 
@@ -202,7 +206,10 @@ def getTopNWords(bow, n=50,typeOfWords='origWords', useEmo=True, keepNumber=True
 
 
 def getSatisfyingTweets(word,origBow,minN=1,wordType='origWords'):
-    wordRepres = np.array(origBow[wordType][word])
+    #gives the list of all the tweets containing the word in input, as minimum minN times
+    #it returns a dict having as key the tweet Id(in the df) and as value the n° of times the word occur in that tweet
+    from numpy import array
+    wordRepres = array(origBow[wordType][word])
     boolRepres = wordRepres >= minN
-    tmpArr = np.array(range(len(boolRepres)))[boolRepres]
+    tmpArr = array(range(len(boolRepres)))[boolRepres]
     return [(i,wordRepres[i]) for i in tmpArr]
