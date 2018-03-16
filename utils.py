@@ -44,6 +44,30 @@ def tweepyAutenticate(apiKeys):
 
     return auth
 
+
+def recoverTweets(outputFile, authors=[], wordsSearched=[], startingDate='', endingDate=''):
+    import subprocess
+    numOfAuthors = len(authors)
+    numOfWords = len(wordsSearched)
+    callVars = ['./recoverTweets.sh',str(numOfWords),str(numOfAuthors)]
+    callVars.extend([word for word in wordsSearched]+[author for author in authors])
+    if startingDate!='':
+        callVars.extend(['-sd',startingDate])
+    if endingDate!='':
+        callVars.extend(['-ed',endingDate])
+    callVars.append(outputFile)
+    print(callVars)
+    print("Querying twitterAPI by using TwitterScraper")
+    subprocess.call(callVars)
+
+    with open('data/'+outputFile+'tmp') as json_data:
+        tweets = json.load(json_data)
+
+    save(tweets,outputFile,onFile=True,onDb=True)
+    print("Query ended. Tweets files saved on your filesystem and on mongo.")
+    os.remove('data/'+outputFile+'tmp')
+
+
 def save(tweets, collectionName, featuresToSave='all', onFile=False, onDb=True, dbName = 'tweets'):
         #open a file to store the status objects
         if featuresToSave!='all':
@@ -53,7 +77,7 @@ def save(tweets, collectionName, featuresToSave='all', onFile=False, onDb=True, 
         if onFile:
             i = 2
             tmpName = collectionName
-            while os.path.exists("data/" + tmpName):
+            while os.path.exists("data/" + tmpName + "/"):
                 tmpName = collectionName + str(i)
                 i+=1
             collectionName = tmpName
