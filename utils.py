@@ -47,6 +47,10 @@ def tweepyAutenticate(apiKeys):
 
 def recoverTweets(outputFile, authors=[], wordsSearched=[], startingDate='', endingDate=''):
     import subprocess
+    if not isinstance(authors, list):
+        authors = [str(authors)]
+    if not isinstance(wordsSearched, list):
+        wordsSearched = [str(wordsSearched)]
     numOfAuthors = len(authors)
     numOfWords = len(wordsSearched)
     callVars = ['./recoverTweets.sh',str(numOfWords),str(numOfAuthors)]

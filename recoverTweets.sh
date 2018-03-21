@@ -27,14 +27,16 @@ if [ ${arr[index]} == '-sd' ]
 then
   index=$((index+1))
   startingDate="since%3A"${arr[index]}
+  index=$((index+1))
 fi
 
 if [ ${arr[index]} == '-ed' ]
 then
   index=$((index+1))
   endingDate="until%3A"${arr[index]}
+  index=$((index+1))
 fi
 
 outputFile=${arr[index]}
 
-echo  "twitterscraper \"$words $authors $startingDate $endingDate\" -o $outputFile"
+twitterscraper \"$words $authors $startingDate $endingDate\" -o $outputFile
