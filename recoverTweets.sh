@@ -14,10 +14,10 @@ fi
 
 if [ $numOfAuthors -gt 0 ]
 then
-  authors="from%3A"${arr[$((numOfWords+2))]}
+  authors="from:"${arr[$((numOfWords+2))]}
   for i in $(seq $((numOfWords+3)) $((numOfWords+numOfAuthors+1)))
   do
-    authors=$authors" OR from%3A"${arr[i]}
+    authors=$authors" OR from:"${arr[i]}
   done
 fi
 
@@ -26,17 +26,17 @@ index=$(($numOfWords+$numOfAuthors+2))
 if [ ${arr[index]} == '-sd' ]
 then
   index=$((index+1))
-  startingDate="since%3A"${arr[index]}
+  startingDate="-bd "${arr[index]}
   index=$((index+1))
 fi
 
 if [ ${arr[index]} == '-ed' ]
 then
   index=$((index+1))
-  endingDate="until%3A"${arr[index]}
+  endingDate="-ed "${arr[index]}
   index=$((index+1))
 fi
 
 outputFile=${arr[index]}
-
-twitterscraper \"$words $authors $startingDate $endingDate\" -o $outputFile
+echo "twitterscraper $words $authors $startingDate $endingDate -o $outputFile"
+twitterscraper $words $authors $startingDate $endingDate -o $outputFile

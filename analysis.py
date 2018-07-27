@@ -1,13 +1,25 @@
 import pandas as pd
-from utils import save, loadTweets
+from utils import saveTweets, loadTweets
 import os
 
-def init():
-    for collection in [x for x in os.listdir('data/') if os.path.isdir('data/' + x)]:
+def syncCollections():
+    db = client['tweets']
+    mongoCollections = db.collection_names()
+    fileSystemCollections= [x for x in os.listdir('data/') if os.path.isdir('data/' + x)]
+    print("Checking all the files needed are currently in MongoDB...")
+    for collection in [fileSystemCollections]:
+        print("checking for collection: ", collection)
         if not loadTweets(collectionName=collection, fromDb=True, dbName=''):
+            tweetsToSave = loadTweets(fromDb=False,collectionName=collection)
+            saveTweets(collectionName=collection, onDb=True, onFile=False,tweets=tweetsToSave)
             print("Automatically saved the tweets collection %s on mongoDB, starting from json files" %collection)
-            tweetsToSave = loadTweets(fromFile=True,fromDb=False,collectionName=collection)
-            save(collectionName=collection, onDb=True, onFile=False,tweets=tweetsToSave)
+    for collection in [mongoCollections]:
+        print("checking for collection: ", collection)
+        if not loadTweets(collectionName=collection, fromDb=False, dbName=''):
+            tweetsToSave = loadTweets(fromDb=True,collectionName=collection)
+            saveTweets(collectionName=collection, onDb=False, onFile=True,tweets=tweetsToSave)
+            print("Automatically saved the tweets collection %s on file system, starting from mongo DB" %collection)
+    print("Done. MongoDB and filesystem now contain all the Tweets.")
 
 def mapSources(source):
     if 'android' in source.lower():
@@ -28,5 +40,3 @@ def getPercentNull(df,attributeName):
 
 def getPercentValues(df,attributeName):
     return df.groupby(attributeName).size().apply(lambda x: float(x) / df.groupby(attributeName).size().sum()*100).sort_values(ascending=False)
-
-init()
