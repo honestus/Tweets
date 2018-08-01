@@ -7,11 +7,53 @@ import string
 #nltk.download('averaged_perceptron_tagger')
 from nltk.corpus import stopwords
 
+#global punctuationTbl, emoji_pattern
+
+def findWholeWord(w):
+    return re.compile(r'\b({})\b'.format(w), flags=re.IGNORECASE).search
+
+def containsWord(text, word, irrelChars = [" ",".",",","?","!",":",";", "(", ")", "{", "}"]):
+    "returns True if a word is contained in text, else False"
+    word = word.strip().lower()
+    text = text.strip().lower()
+
+    if remove_emoticons(word)==word and remove_punctuation(word)==word:
+    ### if the word is a simple word (doesn't contain any special characters (ie: punctuation, emoticons, hashtag))
+        return findWholeWord(word)(text) is not None
+    ### else check for simple matching in string by ignoring irrelevant neighbouring chars (to the searched word)
+    ### eg: "#word" is contained in "#word." but it's not contained in "#worda"
+
+    editedWord=""
+    for c in word:
+        if c in irrelChars:
+            c="\\"+c
+        editedWord+=c
+    return bool(re.findall("[{}]".format("".join(irrelChars))+editedWord+"[{}]".format("".join(irrelChars)),text))
 
 def remove_tags(text):
     import xml
     return ''.join(xml.etree.ElementTree.fromstring(text).itertext())
 
+def remove_emoticons(text):
+    if 'emoji_pattern' not in globals():
+        global emoji_pattern
+        emoji_pattern = re.compile("["
+            u"\U0001F600-\U0001F64F"  # emoticons
+            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+            u"\U0001F680-\U0001F6FF"  # transport & map symbols
+            u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                       "]+", flags=re.UNICODE)
+    return emoji_pattern.sub(r'', text)
+
+def remove_punctuation(text):
+    import unicodedata
+    import sys
+
+    if 'punctuationTbl' not in globals():
+        global punctuationTbl
+        punctuationTbl = dict.fromkeys(i for i in range(sys.maxunicode)
+                             if unicodedata.category(chr(i)).startswith('P'))
+    return text.translate(punctuationTbl)
 
 def text_clean(text):
     # method to remove repeated char, useless chars, etc.
@@ -35,27 +77,12 @@ def text_preprocess(text, nGrams=[], stopWords = set(stopwords.words("english"))
     from nltk import wordnet
     features, words, cleanedText = {}, {}, ""
 
-    def get_emoticons():
+    def get_emoticons(text):
         return regex.findall(r'\p{So}\p{Sk}*',string=text) #splits multiple emo into single ones
         #message_emojies=regex.findall(r'.\p{Sk}+|\X', string=tmpString)
         #returns a list containing all the SINGLE emos found in the message
 
-    def remove_emoticons(text=text):
-        emoji_pattern = re.compile("["
-            u"\U0001F600-\U0001F64F"  # emoticons
-            u"\U0001F300-\U0001F5FF"  # symbols & pictographs
-            u"\U0001F680-\U0001F6FF"  # transport & map symbols
-            u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
-                           "]+", flags=re.UNICODE)
-        return emoji_pattern.sub(r'', text)
 
-    def remove_punctuation(text=text):
-        import unicodedata
-        import sys
-
-        tbl = dict.fromkeys(i for i in range(sys.maxunicode)
-                                 if unicodedata.category(chr(i)).startswith('P'))
-        return text.translate(tbl)
 
     def get_wordnet_pos(treebank_tag):
         if treebank_tag in ['VB', 'VBD', 'VBG', 'VBN', 'VBP', 'VBZ']:
@@ -73,8 +100,8 @@ def text_preprocess(text, nGrams=[], stopWords = set(stopwords.words("english"))
             nGrams.append ( "_".join(word for word in ngram))
         return nGrams
 
-    features['emoticons']=get_emoticons()
-    text = remove_emoticons()
+    features['emoticons']=get_emoticons(text)
+    text = remove_emoticons(text)
 
     #words in original form and their posTag in the sentence
     splittedWords = word_tokenize(text)
@@ -115,21 +142,21 @@ def getBow(corpusFeatures, asBoolean=True, useNGrams = False):
         lemWords = list(feat[3] for feat in wordFeatures)
 
         for w in origWords:
-            if not w in origWordsDict:
+            if w not in origWordsDict:
                 origWordsDict[w]=[0]*len(corpusFeatures)
             if asBoolean:
                 origWordsDict[w][i]=1
             else:
                 origWordsDict[w][i]+=1
         for w in stemWords:
-            if not w in stemWordsDict:
+            if w not in stemWordsDict:
                 stemWordsDict[w]=[0]*len(corpusFeatures)
             if asBoolean:
                 stemWordsDict[w][i]=1
             else:
                 stemWordsDict[w][i]+=1
         for w in lemWords:
-            if not w in lemWordsDict:
+            if w not in lemWordsDict:
                 lemWordsDict[w]=[0]*len(corpusFeatures)
             if asBoolean:
                 lemWordsDict[w][i]=1
@@ -138,7 +165,7 @@ def getBow(corpusFeatures, asBoolean=True, useNGrams = False):
 
         emoticons = corpusFeatures[i]['emoticons']
         for emo in emoticons:
-            if not emo in emoDict:
+            if emo not in emoDict:
                 emoDict[emo]=[0]*len(corpusFeatures)
             if asBoolean:
                 emoDict[emo][i]=1
@@ -149,7 +176,7 @@ def getBow(corpusFeatures, asBoolean=True, useNGrams = False):
             try:
                 nGrams = corpusFeatures[i]['nGrams']
                 for nGram in nGrams:
-                    if not nGram in nGramDict:
+                    if nGram not in nGramDict:
                         nGramDict[nGram]=[0]*len(corpusFeatures)
                     if asBoolean:
                         nGramDict[nGram][i]=1
